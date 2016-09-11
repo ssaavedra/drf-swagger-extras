@@ -1,0 +1,9 @@
+coreapi~=1.32.0
+djangorestframework~=3.4
+flake8~=2.44.0
+isort~=4.2.5
+openapi-codec~=1.0
+pep8~=1.5.7
+pytest~=2.9.1
+pytest-django~=2.9.1
+pytest-cov~=1.8.1
