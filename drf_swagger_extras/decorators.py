@@ -79,6 +79,8 @@ def responds(status=status.HTTP_200_OK,
     if schema_name:
         obj['schema_name'] = schema_name
 
+    obj.update(kwargs)
+
     def decorator(func):
         # We do not return a decorator function, we just modify
         # in-place our function to have the property that we will look
