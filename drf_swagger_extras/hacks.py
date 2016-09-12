@@ -15,8 +15,6 @@ def get_responses(link):
     """
     if hasattr(link, '_responses'):
         return link._responses
-    else:
-        print("Warning. No responses on %s" % link.url)
 
     return {}
 
@@ -41,4 +39,3 @@ def get_produces(link):
 def monkey_patch():
     encode._get_responses = get_responses
     encode._get_operation = get_operation
-    print("Patch applied")
