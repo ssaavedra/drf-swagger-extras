@@ -60,14 +60,20 @@ def responds(status=status.HTTP_200_OK,
              schema=None,
              schema_name=None,
              **kwargs):
-    """
-    @responds_desired(401, meaning='Authentication credentials not provided',
-                      # ? meaning not required; ":" to separate arguments to our syntax
-                      schema={'details:?': 'string'},
-                      schema_name='error',
-    )
+    """Documents the status code per handled case.
+
+    Additional parameters may make it into the OpenAPI documentation
+    per view. Examples of those parameters include
+    examples={'application/json': <example>}. As schemata are needed
+    in order to render the examples in the Web UI, an error will be
+    signaled if examples= are provided without a schema= parameter.
+
+    Schemas can be easily built using a specific syntax.
+
+    TODO: Document the syntax here
 
     """
+    # TODO: Document syntax in above docstring
     if status is None:
         status = 'default'
     obj = {}
@@ -88,41 +94,5 @@ def responds(status=status.HTTP_200_OK,
         if not hasattr(func, '_responses'):
             func._responses = {}
         func._responses[status] = obj
-        return func
-    return decorator
-
-
-def responds2(message, status=status.HTTP_200_OK, **kwargs):
-    """Documents the status code per handled case.
-
-    Additional parameters may make it into the OpenAPI documentation
-    per view. Examples of those parameters include
-    examples={'application/json': <example>} or
-    schema=<schema-definition>. As schemata are needed in order to
-    render the examples in the Web UI, an error will be signaled if
-    examples= are provided without a schema= parameter.
-
-    Schemas can be easily built by using this function's helpers:
-    responds.schemas.obj for constructing objects,
-    responds.schemas.string for constructing strings, and
-    responds.props for providing properties to an object.
-
-    In the future, more of those may be developed, or even other ways
-    of getting this information in a more centralized way.
-
-    """
-    if status is None:
-        status = 'default'
-
-    obj = {}
-    obj['description'] = message
-
-    for key in kwargs.keys():
-        obj[key] = kwargs[key]
-
-    def decorator(func):
-        if not hasattr(func, '_responses'):
-            func._responses = {}
-            func._responses[status] = obj
         return func
     return decorator
