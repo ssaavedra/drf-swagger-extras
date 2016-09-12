@@ -4,6 +4,9 @@ from rest_framework.compat import urlparse
 from rest_framework.schemas import SchemaGenerator as BaseSchemaGenerator
 
 import coreapi
+from drf_swagger_extras.hacks import monkey_patch
+
+monkey_patch()
 
 
 class SchemaGenerator(BaseSchemaGenerator):
