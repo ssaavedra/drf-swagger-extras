@@ -90,6 +90,8 @@ urlpatterns2 = [
 ]
 
 
+@unittest.skipUnless(coreapi, 'coreapi is not installed')
+@override_settings(ROOT_URLCONF='tests.test_schemas')
 class TestDecoratorSchemaWorks(TestCase):
     def test_decorator_wrong_schema_obj_element(self):
         self.assertRaises(Exception,
