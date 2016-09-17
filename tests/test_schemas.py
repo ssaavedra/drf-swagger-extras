@@ -9,12 +9,14 @@ from rest_framework import filters, pagination, permissions, serializers
 from rest_framework.compat import coreapi
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
+from rest_framework.schemas import SchemaGenerator as BaseSchemaGenerator
 from rest_framework.test import APIClient
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from drf_swagger_extras.routers import DefaultRouter
 from drf_swagger_extras.schemas import SchemaGenerator, description_format
+from openapi_codec.encode import generate_swagger_object
 
 
 class MockUser(object):
@@ -318,4 +320,30 @@ class TestSchemaGenerator(TestCase):
                 }
             }
         )
+        self.assertEquals(schema, expected)
+
+    def test_base_generator(self):
+        """Avoid regressions on BaseSchemaGenerator due to monkey-patching"""
+        schema_generator = BaseSchemaGenerator(title='Test View',
+                                               patterns=urlpatterns2)
+        schema = generate_swagger_object(schema_generator.get_schema())
+        expected = generate_swagger_object(coreapi.Document(
+            url='',
+            title='Test View',
+            content={
+                'example-view': {
+                    'create': coreapi.Link(
+                        url='/example-view/',
+                        action='post',
+                        fields=[]
+                    ),
+                    'read': coreapi.Link(
+                        url='/example-view/',
+                        action='get',
+                        fields=[]
+                    )
+                }
+            }
+        ))
+
         self.assertEquals(schema, expected)
