@@ -63,9 +63,9 @@ class ExampleViewSet(ModelViewSet):
 
 @responds(500, "On server failure",
           schema={
-              ':norequired:details': 'string',
+              ('details', 'norequired'): 'string',
               'required-details': {
-                  ':required:key': []
+                  ('key', 'required'): []
               }
           })
 @responds(200, "Always", schema={})

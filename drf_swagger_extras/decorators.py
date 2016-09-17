@@ -3,16 +3,14 @@ from rest_framework import status
 
 
 def sanitized(schema_key):
-    second_colon = schema_key.find(':', 1)
-    if schema_key[0] == ':' and second_colon:
-        return schema_key[second_colon + 1:]
+    if type(schema_key) is tuple:
+        return schema_key[0]
     return schema_key
 
 
 def key_params(schema_key):
-    second_colon = schema_key.find(':', 1)
-    if schema_key[0] == ':' and second_colon:
-        return schema_key[1:second_colon].split(',')
+    if type(schema_key) is tuple:
+        return schema_key[1:]
     return []
 
 
