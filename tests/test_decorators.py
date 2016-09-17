@@ -61,7 +61,13 @@ class ExampleViewSet(ModelViewSet):
         return super(ExampleViewSet, self).get_serializer(*args, **kwargs)
 
 
-@responds(500, "On server failure", schema={':norequired:details': 'string'})
+@responds(500, "On server failure",
+          schema={
+              ':norequired:details': 'string',
+              'required-details': {
+                  ':required:key': []
+              }
+          })
 @responds(200, "Always", schema={})
 class ExampleView(APIView):
     "Example big comment"
@@ -80,8 +86,56 @@ router = DefaultRouter(schema_title='Example API' if coreapi else None)
 router.register('example', ExampleViewSet, base_name='example')
 urlpatterns = [url(r'^', include(router.urls))]
 urlpatterns2 = [
-    url(r'^example-view/$', ExampleView.as_view(), name='example-view')
+    url(r'^example-view/$', ExampleView.as_view(), name='example-view'),
 ]
+
+
+class TestDecoratorSchemaWorks(TestCase):
+    def test_decorator_wrong_schema_obj_element(self):
+        self.assertRaises(Exception,
+                          responds,
+                          500,
+                          "On server failure",
+                          schema={
+                              'wrong-element': APIView,
+                          })
+
+    def test_decorator_status_default(self):
+
+        @responds(None, "Test", schema={})
+        class TestView(APIView):
+            def get(self, request, *args, **kwargs):
+                "Example get comment"
+                return Response()
+
+        schema_generator = SchemaGenerator(
+            title='Test View',
+            patterns=[url('^/different-example/$',
+                          TestView.as_view(),
+                          name='example')]
+        )
+
+        schema = generate_swagger_object(schema_generator.get_schema())
+
+        expected = {
+            'info': {
+                'title': 'Test View', 'version': ''
+            }, 'host': '',
+            'paths': {
+                '/different-example/': {
+                    'get': {
+                        'description': '',
+                        'tags': ['different-example'],
+                        'parameters': [],
+                        'produces': ['application/json', 'application/xml'],
+                        'responses': {'default': {'description': 'Test'}}
+                    }
+                }
+            },
+            'swagger': '2.0'
+        }
+
+        self.assertEquals(schema, expected)
 
 
 @unittest.skipUnless(coreapi, 'coreapi is not installed')
@@ -116,62 +170,75 @@ class TestReturnsDecorator(TestCase):
         schema_generator = SchemaGenerator(
             title='Test View', patterns=urlpatterns2)
         schema = generate_swagger_object(schema_generator.get_schema())
+
         expected = {
-            'swagger': '2.0',
-            'host': '',
+            'info': {
+                'version': '', 'title': 'Test View'
+            },
+            'host': '', 'swagger': '2.0',
             'paths': {
                 '/example-view/': {
                     'post': {
-                        'responses': {
-                            200: {
-                                'description': 'Always',
-                            },
-                            500: {
-                                'description': 'On server failure',
-                                'schema': {
-                                    'title': None,
-                                    'type': 'object',
-                                    'required': [],
-                                    'properties': {
-                                        'details': {'type': 'string'}
-                                    }
-                                }
-                            }
-                        },
-                        'tags': ['example-view'],
+                        'parameters': [],
                         'produces': ['application/json', 'application/xml'],
                         'description': 'Example big comment',
-                        'parameters': []
+                        'tags': ['example-view'],
+                        'responses': {
+                            200: {'description': 'Always'},
+                            500: {
+                                'schema': {
+                                    'required': ['required-details'],
+                                    'properties': {
+                                        'details': {'type': 'string'},
+                                        'required-details': {
+                                            'required': ['key'],
+                                            'properties': {
+                                                'key': {'type': 'list'}
+                                            },
+                                            'title': None,
+                                            'type': 'object'
+                                        }
+                                    },
+                                    'title': None,
+                                    'type': 'object'
+                                },
+                                'description': 'On server failure'
+                            }
+                        }
                     },
                     'get': {
-                        'responses': {
-                            200: {
-                                'description': 'Always',
-                            },
-                            500: {
-                                'description': 'On server failure',
-                                'schema': {
-                                    'title': None,
-                                    'type': 'object',
-                                    'required': [],
-                                    'properties': {
-                                        'details': {'type': 'string'}
-                                    }
-                                }
-                            }
-                        },
-                        'tags': ['example-view'],
+                        'parameters': [],
                         'produces': ['application/json', 'application/xml'],
                         'description': 'Example big comment',
-                        'parameters': []
+                        'tags': ['example-view'],
+                        'responses': {
+                            200: {'description': 'Always'},
+                            500: {
+                                'schema': {
+                                    'required': ['required-details'],
+                                    'properties': {
+                                        'details': {'type': 'string'},
+                                        'required-details': {
+                                            'required': ['key'],
+                                            'properties': {
+                                                'key': {'type': 'list'}
+                                            },
+                                            'title': None,
+                                            'type': 'object'
+                                        }
+                                    },
+                                    'title': None,
+                                    'type': 'object'
+                                },
+                                'description': 'On server failure'
+                            }
+                        }
                     }
-                },
-            },
-            'info': {
-                'title': 'Test View',
-                'version': ''
-            },
+                }
+            }
         }
+
+        print(schema)
         self.assertEquals(schema, expected)
 
     def test_openapi_has_info_viewset(self):
@@ -352,4 +419,5 @@ class TestReturnsDecorator(TestCase):
                 }
             }
         }
+
         self.assertEquals(schema, expected)

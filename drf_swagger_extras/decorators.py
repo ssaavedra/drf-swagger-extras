@@ -6,12 +6,14 @@ def sanitized(schema_key):
     second_colon = schema_key.find(':', 1)
     if schema_key[0] == ':' and second_colon:
         return schema_key[second_colon + 1:]
+    return schema_key
 
 
 def key_params(schema_key):
     second_colon = schema_key.find(':', 1)
     if schema_key[0] == ':' and second_colon:
-        return schema_key[1:second_colon]
+        return schema_key[1:second_colon].split(',')
+    return []
 
 
 def get_required(schema_keys):
