@@ -116,25 +116,20 @@ class TestDecoratorSchemaWorks(TestCase):
                           TestView.as_view(),
                           name='example')]
         )
-
         schema = generate_swagger_object(schema_generator.get_schema())
-
         expected = {
-            'info': {
-                'title': 'Test View', 'version': ''
-            }, 'host': '',
+            'info': {'title': 'Test View', 'version': ''}, 'host': '',
+            'swagger': '2.0',
             'paths': {
                 '/different-example/': {
                     'get': {
-                        'description': '',
+                        'description': '', 'parameters': [],
                         'tags': ['different-example'],
-                        'parameters': [],
                         'produces': ['application/json', 'application/xml'],
                         'responses': {'default': {'description': 'Test'}}
                     }
                 }
-            },
-            'swagger': '2.0'
+            }
         }
 
         self.assertEquals(schema, expected)
@@ -143,6 +138,45 @@ class TestDecoratorSchemaWorks(TestCase):
 @unittest.skipUnless(coreapi, 'coreapi is not installed')
 @override_settings(ROOT_URLCONF='tests.test_schemas')
 class TestReturnsDecorator(TestCase):
+
+    def test_nondecorated_view_works(self):
+        class TestView(APIView):
+            def get(self, request, *args, **kwargs):
+                "Example get comment"
+                return Response()
+
+        schema_generator = SchemaGenerator(
+            title='Test View',
+            patterns=[url('^/different-example/$',
+                          TestView.as_view(),
+                          name='example')]
+        )
+
+        schema = generate_swagger_object(schema_generator.get_schema())
+
+        print(schema)
+
+        expected = {
+            'swagger': '2.0',
+            'host': '',
+            'info': {
+                'title': 'Test View',
+                'version': ''
+            },
+            'paths': {
+                '/different-example/': {
+                    'get': {
+                        'tags': ['different-example'],
+                        'description': '',
+                        'parameters': [],
+                        'responses': None,
+                        'produces': ['application/json', 'application/xml']
+                    }
+                }
+            }
+        }
+        self.assertEquals(schema, expected)
+
     def test_coreapi_schema_compatible(self):
         schema_generator = SchemaGenerator(
             title='Test View', patterns=urlpatterns2)
