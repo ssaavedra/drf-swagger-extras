@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/ssaavedra/drf-swagger-extras.svg?branch=master)](https://travis-ci.org/ssaavedra/drf-swagger-extras)
 [![Coverage Report](https://codecov.io/gh/ssaavedra/drf-swagger-extras/branch/master/graph/badge.svg)](https://codecov.io/gh/ssaavedra/drf-swagger-extras)
+[![Requirements Status](https://requires.io/github/ssaavedra/drf-swagger-extras/requirements.svg?branch=master)](https://requires.io/github/ssaavedra/drf-swagger-extras/requirements/?branch=master)
 
 This package provides OpenAPI documentation Python decorators for
 Django REST Framework APIViews.
