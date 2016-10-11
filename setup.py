@@ -44,7 +44,7 @@ setup(
     ],
     # keywords='',
     packages=['drf_swagger_extras'],
-    install_requires=['djangorestframework~=3.4', 'coreapi~=2.0', 'openapi-codec~=1.0', 'six~=1.10'],
+    install_requires=['djangorestframework~=3.4', 'coreapi~=2.0.8', 'openapi-codec~=1.1.4', 'six~=1.10'],
     extras_require={
         'dev': ['pypandoc~=1.2'],
         'test': ['coverage~=4.2', 'pytest~=3.0.2', 'tox~=2.3'],

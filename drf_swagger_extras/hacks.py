@@ -18,17 +18,15 @@ def get_responses(link):
 
     return {}
 
+openapi_get_operation = encode._get_operation
 
 # We need to patch get_operation if we want openapi to also give us
 # the opportunity to speak about different return formats.
-def get_operation(tag, link):
-    return {
-        'tags': [tag],
-        'description': link.description,
-        'responses': encode._get_responses(link),
-        'produces': get_produces(link),
-        'parameters': encode._get_parameters(link.fields)
-    }
+def get_operation(operation_id, link, tags):
+    operation = openapi_get_operation(operation_id, link, tags)
+    operation['produces'] = get_produces(link)
+
+    return operation
 
 
 def get_produces(link):

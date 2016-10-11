@@ -1,6 +1,10 @@
 """
 Tests for schema generation.
 """
+
+from __future__ import print_function, unicode_literals
+
+import json
 import unittest
 
 from django.conf.urls import include, url
@@ -17,6 +21,8 @@ from drf_swagger_extras.routers import DefaultRouter
 from drf_swagger_extras.schemas import SchemaGenerator, description_format
 from openapi_codec.encode import generate_swagger_object
 
+def to_dict(a):
+    return json.loads(json.dumps(a))
 
 class MockUser(object):
     def is_authenticated(self):
@@ -118,12 +124,13 @@ class TestDecoratorSchemaWorks(TestCase):
         )
         schema = generate_swagger_object(schema_generator.get_schema())
         expected = {
-            'info': {'title': 'Test View', 'version': ''}, 'host': '',
+            'info': {'title': 'Test View', 'version': ''},
             'swagger': '2.0',
             'paths': {
                 '/different-example/': {
                     'get': {
-                        'description': '', 'parameters': [],
+                        'operationId': 'read',
+                        'parameters': [],
                         'tags': ['different-example'],
                         'produces': ['application/json', 'application/xml'],
                         'responses': {'default': {'description': 'Test'}}
@@ -132,7 +139,7 @@ class TestDecoratorSchemaWorks(TestCase):
             }
         }
 
-        self.assertEquals(schema, expected)
+        self.assertEquals(to_dict(schema), expected)
 
 
 @unittest.skipUnless(coreapi, 'coreapi is not installed')
@@ -158,7 +165,6 @@ class TestReturnsDecorator(TestCase):
 
         expected = {
             'swagger': '2.0',
-            'host': '',
             'info': {
                 'title': 'Test View',
                 'version': ''
@@ -166,8 +172,8 @@ class TestReturnsDecorator(TestCase):
             'paths': {
                 '/different-example/': {
                     'get': {
+                        'operationId': 'read',
                         'tags': ['different-example'],
-                        'description': '',
                         'parameters': [],
                         'responses': None,
                         'produces': ['application/json', 'application/xml']
@@ -175,7 +181,7 @@ class TestReturnsDecorator(TestCase):
                 }
             }
         }
-        self.assertEquals(schema, expected)
+        self.assertEquals(to_dict(schema), expected)
 
     def test_coreapi_schema_compatible(self):
         schema_generator = SchemaGenerator(
@@ -211,17 +217,19 @@ class TestReturnsDecorator(TestCase):
             'info': {
                 'version': '', 'title': 'Test View'
             },
-            'host': '', 'swagger': '2.0',
+            'swagger': '2.0',
             'paths': {
                 '/example-view/': {
                     'post': {
                         'parameters': [],
+                        'operationId': 'create',
                         'produces': ['application/json', 'application/xml'],
+                        'summary': 'Example big comment',
                         'description': 'Example big comment',
                         'tags': ['example-view'],
                         'responses': {
-                            200: {'description': 'Always'},
-                            500: {
+                            '200': {'description': 'Always'},
+                            '500': {
                                 'schema': {
                                     'required': ['required-details'],
                                     'properties': {
@@ -244,12 +252,14 @@ class TestReturnsDecorator(TestCase):
                     },
                     'get': {
                         'parameters': [],
+                        'operationId': 'read',
                         'produces': ['application/json', 'application/xml'],
+                        'summary': 'Example big comment',
                         'description': 'Example big comment',
                         'tags': ['example-view'],
                         'responses': {
-                            200: {'description': 'Always'},
-                            500: {
+                            '200': {'description': 'Always'},
+                            '500': {
                                 'schema': {
                                     'required': ['required-details'],
                                     'properties': {
@@ -274,8 +284,7 @@ class TestReturnsDecorator(TestCase):
             }
         }
 
-        print(schema)
-        self.assertEquals(schema, expected)
+        self.assertEquals(to_dict(schema), expected)
 
     def test_openapi_has_info_viewset(self):
         schema_generator = SchemaGenerator(
@@ -283,7 +292,6 @@ class TestReturnsDecorator(TestCase):
         schema = generate_swagger_object(schema_generator.get_schema())
 
         expected = {
-            'host': '',
             'swagger': '2.0',
             'info': {
                 'title': 'Test View',
@@ -292,8 +300,10 @@ class TestReturnsDecorator(TestCase):
             'paths': {
                 '/example/custom_list_action/': {
                     'get': {
+                        'operationId': 'custom_list_action',
                         'responses': None,
                         'tags': ['example'],
+                        'summary': 'custom_list_action comment',
                         'description':
                         'custom_list_action comment\n' +
                         'Example ViewSet big comment',
@@ -303,9 +313,11 @@ class TestReturnsDecorator(TestCase):
                 },
                 '/example/':
                 {'get': {
+                    'summary': 'Example ViewSet big comment',
+                    'description': 'Example ViewSet big comment',
+                    'operationId': 'list',
                     'responses': None,
                     'tags': ['example'],
-                    'description': 'Example ViewSet big comment',
                     'produces': ['application/json', 'application/xml'],
                     'parameters': [
                         {
@@ -324,32 +336,38 @@ class TestReturnsDecorator(TestCase):
                         }
                     ]},
                  'post': {
+                     'consumes': ['application/json'],
+                     'operationId': 'create',
                      'responses': None,
                      'tags': ['example'],
+                     'summary': 'Example ViewSet big comment',
                      'description': 'Example ViewSet big comment',
                      'produces': ['application/json', 'application/xml'],
                      'parameters': [
                          {
-                             'required': True,
-                             'description': 'A field description',
-                             'type': 'string',
-                             'in': 'formData',
-                             'name': 'a'
-                         }, {
-                             'required': False,
-                             'description': '',
-                             'type': 'string',
-                             'in': 'formData',
-                             'name': 'b'
-                         }
-                     ]}},
+                             'in': 'body',
+                             'name': 'data',
+                             'schema': {
+                                 'properties': {
+                                     'a': {'description': 'A field description'},
+                                     'b': {'description': ''},
+                                 },
+                                 'required': ['a'],
+                                 'type': 'object',
+                             },
+                         },
+                     ]},
+                },
                 '/example/{pk}/custom_action/': {
                     'post': {
+                        'operationId': 'custom_action',
+                        'consumes': ['application/json'],
                         'responses': {
-                            200: {'schema_name': 'custom_action',
-                                  'description': 'Always'}
+                            '200': {'schema_name': 'custom_action',
+                                    'description': 'Always'}
                         },
                         'tags': ['example'],
+                        'summary': 'custom_action comment',
                         'description':
                         'custom_action comment\nExample ViewSet big comment',
                         'produces': ['application/json', 'application/xml'],
@@ -360,27 +378,28 @@ class TestReturnsDecorator(TestCase):
                                 'type': 'string',
                                 'in': 'path',
                                 'name': 'pk'
-                            }, {
-                                'required': True,
-                                'description': '',
-                                'type': 'string',
-                                'in': 'formData',
-                                'name': 'c'
-                            }, {
-                                'required': False,
-                                'description': '',
-                                'type': 'string',
-                                'in': 'formData',
-                                'name': 'd'
-                            }
+                            },
+                            {'in': 'body',
+                             'name': 'data',
+                             'schema': {
+                                 'type': 'object',
+                                 'properties': {
+                                     'c': {'description': ''},
+                                     'd': {'description': ''},
+                                 },
+                                 'required': ['c'],
+                             },
+                            },
                         ]
                     }
                 },
                 '/example/{pk}/':
                 {
                     'get': {
+                        'operationId': 'retrieve',
                         'responses': None,
                         'tags': ['example'],
+                        'summary': 'Example ViewSet big comment',
                         'description': 'Example ViewSet big comment',
                         'produces': ['application/json', 'application/xml'],
                         'parameters': [
@@ -392,8 +411,10 @@ class TestReturnsDecorator(TestCase):
                         ]
                     },
                     'delete': {
+                        'operationId': 'destroy',
                         'responses': None,
                         'tags': ['example'],
+                        'summary': 'Example ViewSet big comment',
                         'description': 'Example ViewSet big comment',
                         'produces':
                         ['application/json', 'application/xml'],
@@ -406,8 +427,11 @@ class TestReturnsDecorator(TestCase):
                         ]
                     },
                     'patch': {
+                        'consumes': ['application/json'],
+                        'operationId': 'partial_update',
                         'responses': None,
                         'tags': ['example'],
+                        'summary': 'Example ViewSet big comment',
                         'description': 'Example ViewSet big comment',
                         'produces': ['application/json', 'application/xml'],
                         'parameters': [
@@ -416,23 +440,26 @@ class TestReturnsDecorator(TestCase):
                              'type': 'string',
                              'in': 'path',
                              'name': 'pk'},
-                            {'required': False,
-                             'description':
-                             'A field description',
-                             'type': 'string',
-                             'in': 'formData',
-                             'name': 'a'},
-                            {'required': False,
-                             'description': '',
-                             'type': 'string',
-                             'in': 'formData',
-                             'name': 'b'}
+                            {'in': 'body',
+                             'name': 'data',
+                             'schema': {
+                                 'properties': {
+                                     'a': {'description': 'A field description'},
+                                     'b': {'description': ''},
+                                 },
+                                 'required': [],
+                                 'type': 'object',
+                             },
+                            },
                         ]
                     },
                     'put': {
+                        'operationId': 'update',
                         'responses': None,
                         'tags': ['example'],
+                        'summary': 'Example ViewSet big comment',
                         'description': 'Example ViewSet big comment',
+                        'consumes': ['application/json'],
                         'produces': ['application/json', 'application/xml'],
                         'parameters': [
                             {'required': True,
@@ -440,20 +467,21 @@ class TestReturnsDecorator(TestCase):
                              'type': 'string',
                              'in': 'path',
                              'name': 'pk'},
-                            {'required': True,
-                             'description': 'A field description',
-                             'type': 'string',
-                             'in': 'formData',
-                             'name': 'a'},
-                            {'required': False,
-                             'description': '',
-                             'type': 'string',
-                             'in': 'formData',
-                             'name': 'b'}
+                            {'in': 'body',
+                             'name': 'data',
+                             'schema': {
+                                 'properties': {
+                                     'a': {'description': 'A field description'},
+                                     'b': {'description': ''},
+                                 },
+                                 'required': ['a'],
+                                 'type': 'object',
+                             },
+                            },
                         ]
                     }
                 }
             }
         }
 
-        self.assertEquals(schema, expected)
+        self.assertEquals(to_dict(schema), expected)
